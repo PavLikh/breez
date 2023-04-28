@@ -1,0 +1,9 @@
+{
+    "name": "home/breez",
+    "description": "example",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+}

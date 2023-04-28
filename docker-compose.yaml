@@ -1,0 +1,61 @@
+version: '3.5'
+# приближенный к продакшену конфиг
+services:
+    # PHP fpm
+    breez-app-backend:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: always
+        tty: true
+        working_dir: /var/www/application
+        env_file:
+            - .env
+        volumes:
+            - .:/var/www/application
+        networks:
+            - application-network
+        container_name: breez-app-backend
+         
+    # Nginx Service
+    breez-app-nginx:
+        image: nginx:alpine
+        container_name: breez-app-nginx
+        restart: always
+        tty: true
+        environment:
+            - "APPLICATION_UPSTREAM=breez-app-backend:9000"
+        volumes:
+            - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
+            - ./docker/nginx/templates/:/etc/nginx/templates/
+            - ./public/:/var/www/application/public/
+        networks:
+            - application-network
+        ports:
+            - "80:80"
+            - "443:443"
+             
+    # MySQL Service
+    breez-app-mysql:
+        # image: library/mysql:8.0
+        image: mysql
+        container_name: breez-app-mysql
+        restart: always
+        tty: true
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_DATABASE: app_db
+            MYSQL_USER: admin
+            MYSQL_PASSWORD: 111111
+            MYSQL_ROOT_PASSWORD: admin
+            SERVICE_NAME: mysql
+        networks:
+            - application-network
+        volumes:
+            - ./sql-scripts:/docker-entrypoint-initdb.d/
+
+#Docker Networks
+networks:
+    application-network:
+        driver: bridge
